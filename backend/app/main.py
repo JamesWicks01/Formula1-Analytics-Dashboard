@@ -6,6 +6,14 @@ from app.services.data_loader import list_available_files, load_season_data
 from app.services.merger import build_merged_season_dataset
 from app.utils.constants import SUPPORTED_SEASONS
 
+from app.services.metrics import (
+    calculate_driver_stats,
+    calculate_team_stats,
+    calculate_wins,
+    calculate_podiums,
+    calculate_points_trend,
+)
+
 app = FastAPI(
     title="Formula 1 Analytics API",
     version="1.0.0"
@@ -101,3 +109,112 @@ def get_season_overview(year: int):
         "total_teams": total_teams,
         "wins_leader": wins_leader,
     }
+
+@app.get("/api/season/{year}/drivers")
+def get_drivers(year: int):
+    season_data = load_season_data(year)
+    cleaned = clean_season_data(season_data)
+
+    df = cleaned.get("race_results")
+    if df is None:
+        raise HTTPException(status_code=404, detail="No race data")
+
+    drivers = sorted(df["driver_name"].dropna().unique())
+    return {"drivers": drivers}
+
+@app.get("/api/season/{year}/drivers/stats")
+def get_driver_stats(year: int):
+    season_data = load_season_data(year)
+    cleaned = clean_season_data(season_data)
+
+    df = cleaned.get("race_results")
+    stats = calculate_driver_stats(df)
+
+    return stats.fillna(0).to_dict(orient="records")
+
+@app.get("/api/season/{year}/drivers/compare")
+def compare_drivers(year: int, driver1: str, driver2: str):
+    season_data = load_season_data(year)
+    cleaned = clean_season_data(season_data)
+
+    df = cleaned.get("race_results")
+    stats = calculate_driver_stats(df)
+
+    d1 = stats[stats["driver_name"] == driver1]
+    d2 = stats[stats["driver_name"] == driver2]
+
+    if d1.empty or d2.empty:
+        raise HTTPException(status_code=404, detail="Driver not found")
+
+    return {
+        "driver1": d1.fillna(0).to_dict(orient="records")[0],
+        "driver2": d2.fillna(0).to_dict(orient="records")[0],
+    }
+
+@app.get("/api/season/{year}/teams")
+def get_teams(year: int):
+    season_data = load_season_data(year)
+    cleaned = clean_season_data(season_data)
+
+    df = cleaned.get("race_results")
+    teams = sorted(df["team_name"].dropna().unique())
+
+    return {"teams": teams}
+
+@app.get("/api/season/{year}/teams/stats")
+def get_team_stats(year: int):
+    season_data = load_season_data(year)
+    cleaned = clean_season_data(season_data)
+
+    df = cleaned.get("race_results")
+    stats = calculate_team_stats(df)
+
+    return stats.fillna(0).to_dict(orient="records")
+
+@app.get("/api/season/{year}/races")
+def get_races(year: int):
+    season_data = load_season_data(year)
+    cleaned = clean_season_data(season_data)
+
+    df = cleaned.get("race_results")
+
+    races = sorted(df["grand_prix"].dropna().unique())
+    return {"races": races}
+
+@app.get("/api/season/{year}/races/{race_name}")
+def get_race_details(year: int, race_name: str):
+    season_data = load_season_data(year)
+    cleaned = clean_season_data(season_data)
+
+    df = cleaned.get("race_results")
+
+    race_df = df[df["grand_prix"] == race_name]
+
+    if race_df.empty:
+        raise HTTPException(status_code=404, detail="Race not found")
+
+    return race_df.fillna("").to_dict(orient="records")
+
+@app.get("/api/season/{year}/analytics/wins")
+def get_wins(year: int):
+    season_data = load_season_data(year)
+    cleaned = clean_season_data(season_data)
+
+    df = cleaned.get("race_results")
+    return calculate_wins(df)
+
+@app.get("/api/season/{year}/analytics/podiums")
+def get_podiums(year: int):
+    season_data = load_season_data(year)
+    cleaned = clean_season_data(season_data)
+
+    df = cleaned.get("race_results")
+    return calculate_podiums(df)
+
+@app.get("/api/season/{year}/analytics/points-trend")
+def get_points_trend(year: int):
+    season_data = load_season_data(year)
+    cleaned = clean_season_data(season_data)
+
+    df = cleaned.get("race_results")
+    return calculate_points_trend(df)
