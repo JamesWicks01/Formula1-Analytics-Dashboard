@@ -217,6 +217,8 @@ function Races() {
                   <tbody>
                     {processedResults.map((result, index) => {
                       const isWinner = Number(result.position) === 1;
+                      const isSecond = Number(result.position) === 2;
+                      const isThird = Number(result.position) === 3;
 
                       const isBiggestGainer =
                         biggestGainer &&
@@ -230,9 +232,10 @@ function Races() {
 
                       return (
                         <tr
-                          key={`${result.driver_name}-${index}`}
                           className={`border-b hover:bg-gray-50
                             ${isWinner ? "bg-yellow-50" : ""}
+                            ${isSecond ? "bg-gray-200" : ""}
+                            ${isThird ? "bg-orange-100" : ""}
                             ${isBiggestLoser ? "bg-red-50" : ""}
                             ${isBiggestGainer ? "bg-green-50" : ""}
                           `}
@@ -245,6 +248,18 @@ function Races() {
                             {isWinner && (
                               <span className="ml-2 rounded bg-yellow-200 px-2 py-1 text-xs">
                                 Winner
+                              </span>
+                            )}
+
+                            {isSecond && (
+                              <span className="ml-2 rounded bg-gray-300 px-2 py-1 text-xs">
+                                2nd
+                              </span>
+                            )}
+
+                            {isThird && (
+                              <span className="ml-2 rounded bg-orange-300 px-2 py-1 text-xs">
+                                3rd
                               </span>
                             )}
 
