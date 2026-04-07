@@ -1,18 +1,27 @@
 import { useEffect, useState } from "react";
-import { fetchSeasonOverview } from "../api/client";
+import { fetchSeasonOverview, fetchWins } from "../api/client";
+import Layout from "../components/Layout";
 import StatCard from "../components/StatCard";
 import WinsChart from "../components/WinsChart";
+import LoadingState from "../components/LoadingState";
+import ErrorState from "../components/ErrorState";
 
 function Dashboard() {
   const [overview, setOverview] = useState(null);
+  const [wins, setWins] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     async function loadData() {
       try {
-        const data = await fetchSeasonOverview(2023);
-        setOverview(data);
+        const [overviewData, winsData] = await Promise.all([
+          fetchSeasonOverview(2023),
+          fetchWins(2023),
+        ]);
+
+        setOverview(overviewData);
+        setWins(winsData);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -23,33 +32,28 @@ function Dashboard() {
     loadData();
   }, []);
 
-  if (loading) {
-    return <p className="p-6">Loading dashboard...</p>;
-  }
-
-  if (error) {
-    return <p className="p-6 text-red-600">Error: {error}</p>;
-  }
-
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="mb-6 text-4xl font-bold">Formula 1 Dashboard</h1>
+    <Layout>
+      {loading && <LoadingState message="Loading dashboard..." />}
+      {error && <ErrorState message={`Error: ${error}`} />}
 
-      <div className="mb-6">
-        <p className="text-lg text-gray-700">
-          Season: <span className="font-semibold">{overview.season}</span>
-        </p>
-      </div>
+      {!loading && !error && overview && (
+        <>
+          <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <StatCard title="Season" value={overview.season ?? "-"} />
+            <StatCard title="Total Races" value={overview.total_races ?? "-"} />
+            <StatCard title="Total Drivers" value={overview.total_drivers ?? "-"} />
+            <StatCard title="Total Teams" value={overview.total_teams ?? "-"} />
+          </div>
 
-      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Total Races" value={overview.total_races} />
-        <StatCard title="Total Drivers" value={overview.total_drivers} />
-        <StatCard title="Total Teams" value={overview.total_teams} />
-        <StatCard title="Wins Leader" value={overview.wins_leader} />
-      </div>
+          <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <StatCard title="Wins Leader" value={overview.wins_leader ?? "-"} />
+          </div>
 
-      <WinsChart />
-    </div>
+          <WinsChart data={wins} />
+        </>
+      )}
+    </Layout>
   );
 }
 

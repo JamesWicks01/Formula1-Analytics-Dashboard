@@ -8,22 +8,20 @@ import {
   CartesianGrid,
 } from "recharts";
 
-const sampleData = [
-  { driver: "Verstappen", wins: 19 },
-  { driver: "Perez", wins: 2 },
-  { driver: "Sainz", wins: 1 },
-  { driver: "Leclerc", wins: 0 },
-];
+function WinsChart({ data }) {
+  const chartData = Object.entries(data || {}).map(([driver, wins]) => ({
+    driver,
+    wins,
+  }));
 
-function WinsChart() {
   return (
     <div className="rounded-2xl bg-white p-6 shadow-md">
       <h2 className="mb-4 text-xl font-bold">Wins by Driver</h2>
-      <div className="h-80">
+      <div className="h-96">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={sampleData}>
+          <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="driver" />
+            <XAxis dataKey="driver" angle={-20} textAnchor="end" height={90} />
             <YAxis />
             <Tooltip />
             <Bar dataKey="wins" />
