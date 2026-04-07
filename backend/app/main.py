@@ -173,27 +173,57 @@ def get_team_stats(year: int):
 
 @app.get("/api/season/{year}/races")
 def get_races(year: int):
+    if year not in SUPPORTED_SEASONS:
+        raise HTTPException(status_code=404, detail="Season not supported")
+
     season_data = load_season_data(year)
     cleaned = clean_season_data(season_data)
 
     df = cleaned.get("race_results")
+    if df is None or df.empty:
+        raise HTTPException(status_code=404, detail="No race data")
 
-    races = sorted(df["grand_prix"].dropna().unique())
-    return {"races": races}
+    if "grand_prix" not in df.columns:
+        raise HTTPException(
+            status_code=500,
+            detail=f"No grand_prix column found. Available columns: {df.columns.tolist()}"
+        )
+
+    races = sorted(df["grand_prix"].dropna().astype(str).unique())
+
+    return {
+        "season": year,
+        "races": races,
+    }
 
 @app.get("/api/season/{year}/races/{race_name}")
 def get_race_details(year: int, race_name: str):
+    if year not in SUPPORTED_SEASONS:
+        raise HTTPException(status_code=404, detail="Season not supported")
+
     season_data = load_season_data(year)
     cleaned = clean_season_data(season_data)
 
     df = cleaned.get("race_results")
+    if df is None or df.empty:
+        raise HTTPException(status_code=404, detail="No race data")
 
-    race_df = df[df["grand_prix"] == race_name]
+    if "grand_prix" not in df.columns:
+        raise HTTPException(
+            status_code=500,
+            detail=f"No grand_prix column found. Available columns: {df.columns.tolist()}"
+        )
+
+    race_df = df[df["grand_prix"].astype(str) == race_name]
 
     if race_df.empty:
         raise HTTPException(status_code=404, detail="Race not found")
 
-    return race_df.fillna("").to_dict(orient="records")
+    return {
+        "season": year,
+        "race": race_name,
+        "results": race_df.fillna("").to_dict(orient="records"),
+    }
 
 @app.get("/api/season/{year}/analytics/wins")
 def get_wins(year: int):

@@ -71,18 +71,23 @@ def calculate_podiums(df: pd.DataFrame):
 
 
 def calculate_points_trend(df: pd.DataFrame):
-    if df is None or "round" not in df.columns:
+    if df is None or df.empty:
         return []
 
-    trend = (
-        df.groupby(["round", "driver_name"])["points"]
-        .sum()
-        .groupby(level=1)
-        .cumsum()
-        .reset_index()
-    )
+    if "round" not in df.columns or "driver_name" not in df.columns or "points" not in df.columns:
+        return []
 
-    return trend.to_dict(orient="records")
+    trend_df = df[["round", "grand_prix", "driver_name", "points"]].copy()
+
+    trend_df["round"] = pd.to_numeric(trend_df["round"], errors="coerce")
+    trend_df["points"] = pd.to_numeric(trend_df["points"], errors="coerce").fillna(0)
+
+    trend_df = trend_df.dropna(subset=["round", "driver_name"])
+    trend_df = trend_df.sort_values(by=["driver_name", "round"])
+
+    trend_df["cumulative_points"] = trend_df.groupby("driver_name")["points"].cumsum()
+
+    return trend_df.to_dict(orient="records")
 
 
 def calculate_position_change(df: pd.DataFrame):
