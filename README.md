@@ -119,8 +119,8 @@ Built with **FastAPI (backend)** and **React + Vite (frontend)**.
 ```bash
 cd backend
 pip install -r requirements.txt
-Backend runs at:
 ```
+Backend runs at:
 http://127.0.0.1:8000
 
 
