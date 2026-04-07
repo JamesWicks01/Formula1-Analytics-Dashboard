@@ -5,7 +5,6 @@ def calculate_driver_stats(df: pd.DataFrame) -> pd.DataFrame:
     if df is None or df.empty:
         return pd.DataFrame()
 
-    # Ensure required columns exist
     required = ["driver_name", "position", "points"]
     for col in required:
         if col not in df.columns:
@@ -13,14 +12,20 @@ def calculate_driver_stats(df: pd.DataFrame) -> pd.DataFrame:
 
     stats = df.copy()
 
-    # Wins
-    stats["win"] = stats["position"] == 1
+    stats["position"] = pd.to_numeric(stats["position"], errors="coerce")
+    stats["points"] = pd.to_numeric(stats["points"], errors="coerce").fillna(0)
 
-    # Podiums
+    stats["win"] = stats["position"] == 1
     stats["podium"] = stats["position"].isin([1, 2, 3])
 
-    # DNF detection (position is NaN or non-numeric)
-    stats["dnf"] = stats["position"].isna()
+    if "time_retired" in stats.columns:
+        stats["dnf"] = (
+            stats["time_retired"]
+            .astype(str)
+            .str.contains("retired|dnf|dns|dsq", case=False, na=False)
+        )
+    else:
+        stats["dnf"] = stats["position"].isna()
 
     grouped = stats.groupby("driver_name").agg(
         races=("driver_name", "count"),
@@ -74,21 +79,26 @@ def calculate_points_trend(df: pd.DataFrame):
     if df is None or df.empty:
         return []
 
-    if "round" not in df.columns or "driver_name" not in df.columns or "points" not in df.columns:
-        return []
+    required = ["round", "driver_name", "points"]
+    for col in required:
+        if col not in df.columns:
+            return []
 
-    trend_df = df[["round", "grand_prix", "driver_name", "points"]].copy()
-
+    trend_df = df.copy()
     trend_df["round"] = pd.to_numeric(trend_df["round"], errors="coerce")
     trend_df["points"] = pd.to_numeric(trend_df["points"], errors="coerce").fillna(0)
+
+    if "grand_prix" not in trend_df.columns:
+        trend_df["grand_prix"] = ""
 
     trend_df = trend_df.dropna(subset=["round", "driver_name"])
     trend_df = trend_df.sort_values(by=["driver_name", "round"])
 
     trend_df["cumulative_points"] = trend_df.groupby("driver_name")["points"].cumsum()
 
-    return trend_df.to_dict(orient="records")
-
+    return trend_df[["round", "grand_prix", "driver_name", "cumulative_points"]].to_dict(
+        orient="records"
+    )
 
 def calculate_position_change(df: pd.DataFrame):
     if df is None:
