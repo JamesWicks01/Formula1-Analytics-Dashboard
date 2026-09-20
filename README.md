@@ -196,7 +196,27 @@ git --version
 
 # ⚙️ Setup
 
-## 1. Backend
+## Automatic Setup and Start (Windows PowerShell)
+
+From the project root, install dependencies once, then start the application:
+
+```powershell
+.\setup.ps1
+.\start.ps1
+```
+
+The launcher runs the backend from `backend/` and the frontend from `frontend/`.
+Open http://localhost:5173 for the dashboard; the API runs at http://127.0.0.1:8000.
+Keep the terminal open and press **Ctrl+C** to stop both servers.
+For subsequent launches, only run `.\start.ps1`.
+
+## Manual Setup and Start
+
+Use two terminals, starting each from the project root.
+
+### 1. Backend
+
+In the first terminal, install the backend dependencies and start the API:
 
 ```bash
 cd backend
@@ -212,7 +232,9 @@ http://127.0.0.1:8000
 
 ---
 
-## 2. Frontend
+### 2. Frontend
+
+In the second terminal, install the frontend dependencies and start the dashboard:
 
 ```bash
 cd frontend
@@ -225,6 +247,10 @@ Frontend runs at:
 ```
 http://localhost:5173
 ```
+
+For subsequent launches, skip the install commands and run the start command in
+each folder: `python -m uvicorn app.main:app --reload` in `backend/` and
+`npm run dev` in `frontend/`. Press **Ctrl+C** in each terminal to stop its server.
 
 ---
 
