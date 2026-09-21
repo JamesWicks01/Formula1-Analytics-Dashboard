@@ -339,14 +339,35 @@ Explorer with both FastF1 fixtures and the bundled CSV fallback.
 
 # 📸 Screenshots
 
-Add screenshots of:
+The redesigned interface, shown with the 2023 season.
 
-- Dashboard
-- Drivers Page
-- Teams Page
-- Race Explorer
-- Driver Comparison
-- Cumulative Points Trend
+## Welcome and season selection
+
+![Welcome page with a season selector and Open dashboard button](docs/screenshots/welcome.png)
+
+## Dashboard
+
+![2023 dashboard showing season statistics, wins, podiums and cumulative points](docs/screenshots/dashboard.png)
+
+## Drivers
+
+![Drivers page with searchable and sortable season statistics](docs/screenshots/drivers.png)
+
+## Teams
+
+![Teams page showing race results, wins, podiums and points by team](docs/screenshots/teams.png)
+
+## Race Explorer
+
+![Race Explorer showing the Abu Dhabi Grand Prix results and position changes](docs/screenshots/races.png)
+
+## Driver comparison
+
+![Driver comparison with side-by-side race statistics](docs/screenshots/driver-comparison.png)
+
+## Cumulative points trend
+
+![Line chart tracking cumulative race points for the top five drivers](docs/screenshots/points-trend.png)
 
 ---
 
