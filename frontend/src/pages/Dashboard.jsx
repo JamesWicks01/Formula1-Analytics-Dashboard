@@ -26,19 +26,24 @@ function Dashboard() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    let active = true;
     async function loadSeasons() {
       try {
         const seasonData = await fetchSeasons();
+        if (!active) return;
         setSeasons(seasonData.seasons || [2023]);
       } catch {
+        if (!active) return;
         setSeasons([2023]);
       }
     }
 
     loadSeasons();
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
+    let active = true;
     async function loadDashboardData() {
       try {
         setError("");
@@ -52,18 +57,21 @@ function Dashboard() {
             fetchPointsTrend(selectedSeason),
           ]);
 
+        if (!active) return;
         setOverview(overviewData);
         setWins(winsData);
         setPodiums(podiumsData);
         setPointsTrend(pointsTrendData);
       } catch (err) {
+        if (!active) return;
         setError(err.message);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     }
 
     loadDashboardData();
+    return () => { active = false; };
   }, [selectedSeason]);
 
   return (

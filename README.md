@@ -2,7 +2,7 @@
 
 A full-stack web application for exploring and analysing Formula 1 race data using real-world datasets.
 
-Built with **FastAPI** (backend) and **React + Vite** (frontend), the dashboard provides interactive statistics, race analysis, driver comparisons, team performance, and data visualisations for the 2023 Formula 1 World Championship.
+Built with **FastAPI** (backend) and **React + Vite** (frontend), the dashboard provides interactive statistics, race analysis, driver comparisons, team performance, and data visualisations across Formula 1 seasons from 2018 onwards.
 
 ---
 
@@ -91,7 +91,7 @@ https://github.com/JamesWicks01/Formula1-Analytics-Dashboard
 ## Features
 
 - REST API
-- CSV dataset loading
+- FastF1 schedules and race results, with automatic CSV fallback
 - Dataset cleaning and normalisation
 - Driver statistics
 - Team statistics
@@ -284,11 +284,56 @@ GET /api/season/{year}/analytics/points-trend
 
 # 📌 Data Source
 
-The project currently uses Formula 1 datasets from:
+The bundled CSV fallback datasets are from:
 
 https://github.com/toUpperCase78/formula1-datasets
 
-Future versions will migrate to **FastF1** as the primary data source while retaining CSV support as a fallback.
+**FastF1 is now the primary source** for season schedules and Grand Prix results.
+The selector supports 2018 through the current year. The bundled 2023 CSVs are
+used automatically when FastF1 fails or a completed race has incomplete results.
+Fallback is selected for the entire season so totals never silently omit a failed
+round. Other seasons need matching CSV files in `backend/data/raw/` to work offline.
+
+FastF1's disk cache defaults to `backend/data/cache/fastf1/`, created automatically
+and excluded from Git. Set `FASTF1_CACHE_DIR` before starting the backend to use a
+different writable location. Each process also caches normalized seasons for one
+hour; fallback and unavailable responses are retried on the next request after
+60 seconds. Concurrent requests for a season share one load. The first load may
+take several minutes; subsequent requests reuse the cache.
+
+Every page shows the active source and number of races with results. A season
+without FastF1 data or usable CSVs returns HTTP 503 with a readable error and
+`Retry-After: 60`. Unsupported years return HTTP 404. New endpoints:
+
+```text
+GET /api/season/{year}/schedule
+GET /api/season/{year}/status
+```
+
+Only races starting at least four hours ago are requested. Future races remain
+in the schedule. This is a results dashboard, not a live timing service. Existing
+points statistics remain Grand Prix race points; they exclude sprint points and
+should not be interpreted as official championship standings. FastF1 qualifying,
+sprint and driver-of-the-day enrichment is outside this phase.
+
+### Phase 1 verification
+
+FastF1 3.8.3 was installed in the development environment. To install on another
+machine, use `python -m pip install -r backend/requirements.txt`.
+
+```powershell
+cd backend
+python -m pip install -r requirements-dev.txt
+python -B -m unittest discover -s tests -v
+cd ../frontend
+npm run lint
+npm run build
+```
+
+The offline tests cover normalization, schedule filtering, cache isolation and
+expiry, concurrent requests, unavailable data, unsupported seasons, and the API
+contracts used by Dashboard, Drivers (including comparison), Teams and Race
+Explorer with both FastF1 fixtures and the bundled CSV fallback.
 
 ---
 

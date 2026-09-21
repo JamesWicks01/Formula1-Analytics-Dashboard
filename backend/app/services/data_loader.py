@@ -17,7 +17,7 @@ def load_csv_if_exists(file_path: Path) -> Optional[pd.DataFrame]:
     return pd.read_csv(file_path)
 
 
-def load_season_data(year: int) -> Dict[str, Optional[pd.DataFrame]]:
+def load_csv_season_data(year: int) -> Dict[str, Optional[pd.DataFrame]]:
     season_data = {}
 
     for dataset_key in SEASON_FILE_PATTERNS:
@@ -25,6 +25,12 @@ def load_season_data(year: int) -> Dict[str, Optional[pd.DataFrame]]:
         season_data[dataset_key] = load_csv_if_exists(file_path)
 
     return season_data
+
+
+def load_season_data(year: int) -> Dict[str, Optional[pd.DataFrame]]:
+    # Lazy import keeps the CSV reader usable by the source coordinator.
+    from app.services.season_service import get_season
+    return get_season(year)[0]
 
 
 def list_available_files(year: int) -> Dict[str, bool]:

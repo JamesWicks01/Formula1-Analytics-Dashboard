@@ -4,7 +4,8 @@ async function fetchJson(endpoint) {
   const response = await fetch(`${API_BASE_URL}${endpoint}`);
 
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
+    const body = await response.json().catch(() => ({}));
+    throw new Error(typeof body.detail === "string" ? body.detail : `Request failed: ${response.status}`);
   }
 
   return response.json();
@@ -54,4 +55,8 @@ export function fetchPodiums(year) {
 
 export function fetchPointsTrend(year) {
   return fetchJson(`/api/season/${year}/analytics/points-trend`);
+}
+
+export function fetchSourceStatus(year) {
+  return fetchJson(`/api/season/${year}/status`);
 }

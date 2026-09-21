@@ -3,7 +3,7 @@ import pandas as pd
 
 def calculate_driver_stats(df: pd.DataFrame) -> pd.DataFrame:
     if df is None or df.empty:
-        return pd.DataFrame()
+        return pd.DataFrame(columns=["driver_name", "races", "wins", "podiums", "points", "avg_finish", "dnfs"])
 
     required = ["driver_name", "position", "points"]
     for col in required:
@@ -18,7 +18,9 @@ def calculate_driver_stats(df: pd.DataFrame) -> pd.DataFrame:
     stats["win"] = stats["position"] == 1
     stats["podium"] = stats["position"].isin([1, 2, 3])
 
-    if "time_retired" in stats.columns:
+    if "is_dnf" in stats.columns:
+        stats["dnf"] = stats["is_dnf"].fillna(False).astype(bool)
+    elif "time_retired" in stats.columns:
         stats["dnf"] = (
             stats["time_retired"]
             .astype(str)

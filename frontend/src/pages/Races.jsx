@@ -6,55 +6,66 @@ import ErrorState from "../components/ErrorState";
 import SeasonSelector from "../components/SeasonSelector";
 
 function getPositionNumber(position) {
+  if (position === "" || position == null) return null;
   const value = Number(position);
-  return Number.isFinite(value) ? value : null;
+  return Number.isFinite(value) && value > 0 ? value : null;
 }
 
 function Races() {
   const [seasons, setSeasons] = useState([2023]);
   const [selectedSeason, setSelectedSeason] = useState(2023);
   const [races, setRaces] = useState([]);
-  const [selectedRace, setSelectedRace] = useState("");
+  const [selection, setSelection] = useState(null);
+  const selectedRace = selection?.season === selectedSeason ? selection.race : "";
   const [raceResults, setRaceResults] = useState([]);
   const [loadingRaces, setLoadingRaces] = useState(true);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    let active = true;
     async function loadSeasons() {
       try {
         const seasonData = await fetchSeasons();
+        if (!active) return;
         setSeasons(seasonData.seasons || [2023]);
       } catch {
+        if (!active) return;
         setSeasons([2023]);
       }
     }
 
     loadSeasons();
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
+    let active = true;
     async function loadRaces() {
       try {
         setError("");
         setLoadingRaces(true);
 
         const data = await fetchRaces(selectedSeason);
+        if (!active) return;
         const raceList = data.races || [];
 
         setRaces(raceList);
-        setSelectedRace(raceList[0] || "");
+        setSelection({ season: selectedSeason, race: raceList[0] || "" });
       } catch (err) {
+        if (!active) return;
         setError(err.message);
       } finally {
-        setLoadingRaces(false);
+        if (active) setLoadingRaces(false);
       }
     }
 
     loadRaces();
+    return () => { active = false; };
   }, [selectedSeason]);
 
   useEffect(() => {
+    let active = true;
     async function loadRaceDetails() {
       if (!selectedRace) return;
 
@@ -63,15 +74,18 @@ function Races() {
         setLoadingDetails(true);
 
         const data = await fetchRaceDetails(selectedSeason, selectedRace);
+        if (!active) return;
         setRaceResults(data.results || []);
       } catch (err) {
+        if (!active) return;
         setError(err.message);
       } finally {
-        setLoadingDetails(false);
+        if (active) setLoadingDetails(false);
       }
     }
 
     loadRaceDetails();
+    return () => { active = false; };
   }, [selectedSeason, selectedRace]);
 
   const processedResults = useMemo(() => {
@@ -80,10 +94,10 @@ function Races() {
         const grid = Number(result.grid);
         const position = getPositionNumber(result.position);
         const status = String(result.time_retired || "");
-        const isDnf = /retired|dnf|dns|dsq/i.test(status);
+        const isDnf = result.is_dnf ?? /retired|dnf|dns|dsq/i.test(status);
 
         const positionsGained =
-          !isDnf && Number.isFinite(grid) && Number.isFinite(position)
+          !isDnf && Number.isFinite(grid) && grid > 0 && Number.isFinite(position)
             ? grid - position
             : null;
 
@@ -121,22 +135,24 @@ function Races() {
   }, [raceResults]);
 
   const biggestGainer = useMemo(() => {
+    if (loadingDetails || !selectedRace) return null;
     return processedResults.reduce((best, current) => {
       if (current.isDnf) return best;
       if (current.positionsGained == null) return best;
       if (!best || current.positionsGained > best.positionsGained) return current;
       return best;
     }, null);
-  }, [processedResults]);
+  }, [processedResults, loadingDetails, selectedRace]);
 
   const biggestLoser = useMemo(() => {
+    if (loadingDetails || !selectedRace) return null;
     return processedResults.reduce((worst, current) => {
       if (current.isDnf) return worst;
       if (current.positionsGained == null) return worst;
       if (!worst || current.positionsGained < worst.positionsGained) return current;
       return worst;
     }, null);
-  }, [processedResults]);
+  }, [processedResults, loadingDetails, selectedRace]);
 
   return (
     <Layout>
@@ -159,7 +175,7 @@ function Races() {
 
             <select
               value={selectedRace}
-              onChange={(e) => setSelectedRace(e.target.value)}
+              onChange={(e) => setSelection({ season: selectedSeason, race: e.target.value })}
               className="w-full rounded-xl border border-gray-300 p-3"
             >
               {races.map((race) => (
@@ -215,7 +231,7 @@ function Races() {
                     </tr>
                   </thead>
                   <tbody>
-                    {processedResults.map((result, index) => {
+                    {processedResults.map((result) => {
                       const isWinner = Number(result.position) === 1;
                       const isSecond = Number(result.position) === 2;
                       const isThird = Number(result.position) === 3;
@@ -232,6 +248,7 @@ function Races() {
 
                       return (
                         <tr
+                          key={result.driver_name}
                           className={`border-b hover:bg-gray-50
                             ${isWinner ? "bg-yellow-50" : ""}
                             ${isSecond ? "bg-gray-200" : ""}

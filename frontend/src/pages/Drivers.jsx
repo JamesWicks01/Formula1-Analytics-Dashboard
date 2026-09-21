@@ -16,34 +16,42 @@ function Drivers() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    let active = true;
     async function loadSeasons() {
       try {
         const seasonData = await fetchSeasons();
+        if (!active) return;
         setSeasons(seasonData.seasons || [2023]);
       } catch {
+        if (!active) return;
         setSeasons([2023]);
       }
     }
 
     loadSeasons();
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
+    let active = true;
     async function loadDrivers() {
       try {
         setError("");
         setLoading(true);
 
         const data = await fetchDriverStats(selectedSeason);
+        if (!active) return;
         setDrivers(data);
       } catch (err) {
+        if (!active) return;
         setError(err.message);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     }
 
     loadDrivers();
+    return () => { active = false; };
   }, [selectedSeason]);
 
   const filteredDrivers = useMemo(() => {
@@ -70,7 +78,7 @@ function Drivers() {
       </div>
 
       <div className="mb-6">
-        <DriverComparisonPanel season={selectedSeason} />
+        <DriverComparisonPanel key={selectedSeason} season={selectedSeason} />
       </div>
 
       {loading && <LoadingState message="Loading driver stats..." />}

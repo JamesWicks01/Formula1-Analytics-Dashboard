@@ -1,3 +1,5 @@
+import DataSourceStatus from "./DataSourceStatus";
+
 function SeasonSelector({ seasons = [], selectedSeason, onChange }) {
   return (
     <div className="rounded-2xl bg-white p-4 shadow-md">
@@ -16,6 +18,7 @@ function SeasonSelector({ seasons = [], selectedSeason, onChange }) {
           </option>
         ))}
       </select>
+      <DataSourceStatus season={selectedSeason} />
     </div>
   );
 }

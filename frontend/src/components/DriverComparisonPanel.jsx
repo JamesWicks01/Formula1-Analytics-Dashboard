@@ -42,28 +42,33 @@ function DriverComparisonPanel({ season }) {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    let active = true;
     async function loadDriversList() {
       try {
         setError("");
         setLoadingDrivers(true);
 
         const result = await fetchDrivers(season);
+        if (!active) return;
         const driverList = result.drivers || [];
 
         setDrivers(driverList);
         setDriver1(driverList[0] || "");
         setDriver2(driverList[1] || driverList[0] || "");
       } catch (err) {
+        if (!active) return;
         setError(err.message);
       } finally {
-        setLoadingDrivers(false);
+        if (active) setLoadingDrivers(false);
       }
     }
 
     loadDriversList();
+    return () => { active = false; };
   }, [season]);
 
   useEffect(() => {
+    let active = true;
     async function loadComparison() {
       if (!driver1 || !driver2) return;
 
@@ -72,15 +77,18 @@ function DriverComparisonPanel({ season }) {
         setLoadingComparison(true);
 
         const result = await compareDrivers(season, driver1, driver2);
+        if (!active) return;
         setComparison(result);
       } catch (err) {
+        if (!active) return;
         setError(err.message);
       } finally {
-        setLoadingComparison(false);
+        if (active) setLoadingComparison(false);
       }
     }
 
     loadComparison();
+    return () => { active = false; };
   }, [season, driver1, driver2]);
 
   if (loadingDrivers) {

@@ -1,10 +1,12 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.services.cleaner import clean_season_data
 from app.services.data_loader import list_available_files, load_season_data
 from app.services.merger import build_merged_season_dataset
 from app.utils.constants import SUPPORTED_SEASONS
+from app.services.season_service import get_season, UnsupportedSeason, DataUnavailable
 
 from app.services.metrics import (
     calculate_driver_stats,
@@ -26,6 +28,28 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(UnsupportedSeason)
+async def unsupported_season_handler(request, exc):
+    return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+
+@app.exception_handler(DataUnavailable)
+async def unavailable_handler(request, exc):
+    return JSONResponse(status_code=503, content={"detail": str(exc)}, headers={"Retry-After": "60"})
+
+
+@app.get("/api/season/{year}/status")
+def get_source_status(year: int):
+    return get_season(year)[1]
+
+
+@app.get("/api/season/{year}/schedule")
+def get_schedule(year: int):
+    data, status = get_season(year)
+    calendar = data.get("calendar")
+    return {"season": year, "schedule": [] if calendar is None else calendar.fillna("").to_dict(orient="records"), "data_source": status}
 
 
 @app.get("/")
