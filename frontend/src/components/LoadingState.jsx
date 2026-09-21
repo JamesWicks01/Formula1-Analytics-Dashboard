@@ -1,7 +1,7 @@
 function LoadingState({ message = "Loading..." }) {
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-md">
-      <p className="text-gray-700">{message}</p>
+    <div role="status" className="analytics-panel">
+      <p className="text-gray-300">{message}</p>
     </div>
   );
 }

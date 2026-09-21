@@ -1,36 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { fetchSeasons, fetchDriverStats } from "../api/client";
+import { fetchDriverStats } from "../api/client";
 import Layout from "../components/Layout";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
-import SeasonSelector from "../components/SeasonSelector";
 import DriverComparisonPanel from "../components/DriverComparisonPanel";
 
-function Drivers() {
-  const [seasons, setSeasons] = useState([2023]);
-  const [selectedSeason, setSelectedSeason] = useState(2023);
+function Drivers({ selectedSeason }) {
   const [drivers, setDrivers] = useState([]);
   const [sortBy, setSortBy] = useState("points");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    let active = true;
-    async function loadSeasons() {
-      try {
-        const seasonData = await fetchSeasons();
-        if (!active) return;
-        setSeasons(seasonData.seasons || [2023]);
-      } catch {
-        if (!active) return;
-        setSeasons([2023]);
-      }
-    }
-
-    loadSeasons();
-    return () => { active = false; };
-  }, []);
 
   useEffect(() => {
     let active = true;
@@ -69,39 +49,29 @@ function Drivers() {
 
   return (
     <Layout>
-      <div className="mb-6">
-        <SeasonSelector
-          seasons={seasons}
-          selectedSeason={selectedSeason}
-          onChange={setSelectedSeason}
-        />
-      </div>
-
-      <div className="mb-6">
-        <DriverComparisonPanel key={selectedSeason} season={selectedSeason} />
-      </div>
-
       {loading && <LoadingState message="Loading driver stats..." />}
       {error && <ErrorState message={`Error: ${error}`} />}
 
       {!loading && !error && (
-        <div className="rounded-2xl bg-white p-6 shadow-md">
+        <div className="analytics-panel">
           <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <h2 className="text-2xl font-bold">Driver Statistics</h2>
 
             <div className="flex flex-col gap-3 md:flex-row">
               <input
+                aria-label="Search drivers"
                 type="text"
                 placeholder="Search driver..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="rounded-xl border border-gray-300 p-3"
+                className="analytics-control"
               />
 
               <select
+                aria-label="Sort drivers"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="rounded-xl border border-gray-300 p-3"
+                className="analytics-control"
               >
                 <option value="points">Sort by Points</option>
                 <option value="wins">Sort by Wins</option>
@@ -115,7 +85,7 @@ function Drivers() {
           <div className="overflow-x-auto">
             <table className="min-w-full border-collapse text-sm">
               <thead>
-                <tr className="border-b text-left">
+                <tr className="border-b border-gray-700 text-left">
                   <th className="p-3">Driver</th>
                   <th className="p-3">Races</th>
                   <th className="p-3">Wins</th>
@@ -127,7 +97,7 @@ function Drivers() {
               </thead>
               <tbody>
                 {filteredDrivers.map((driver) => (
-                  <tr key={driver.driver_name} className="border-b hover:bg-gray-50">
+                  <tr key={driver.driver_name} className="border-b border-gray-800 hover:bg-gray-800/70">
                     <td className="p-3 font-medium">{driver.driver_name}</td>
                     <td className="p-3">{driver.races}</td>
                     <td className="p-3">{driver.wins}</td>
@@ -144,6 +114,9 @@ function Drivers() {
           </div>
         </div>
       )}
+      <div className="mt-6">
+        <DriverComparisonPanel key={selectedSeason} season={selectedSeason} />
+      </div>
     </Layout>
   );
 }

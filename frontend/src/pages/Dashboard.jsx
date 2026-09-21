@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  fetchSeasons,
   fetchSeasonOverview,
   fetchWins,
   fetchPodiums,
@@ -13,34 +12,14 @@ import PodiumsChart from "../components/PodiumsChart";
 import PointsTrendChart from "../components/PointsTrendChart";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
-import SeasonSelector from "../components/SeasonSelector";
 
-function Dashboard() {
-  const [seasons, setSeasons] = useState([2023]);
-  const [selectedSeason, setSelectedSeason] = useState(2023);
+function Dashboard({ selectedSeason }) {
   const [overview, setOverview] = useState(null);
   const [wins, setWins] = useState({});
   const [podiums, setPodiums] = useState({});
   const [pointsTrend, setPointsTrend] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    let active = true;
-    async function loadSeasons() {
-      try {
-        const seasonData = await fetchSeasons();
-        if (!active) return;
-        setSeasons(seasonData.seasons || [2023]);
-      } catch {
-        if (!active) return;
-        setSeasons([2023]);
-      }
-    }
-
-    loadSeasons();
-    return () => { active = false; };
-  }, []);
 
   useEffect(() => {
     let active = true;
@@ -76,27 +55,15 @@ function Dashboard() {
 
   return (
     <Layout>
-      <div className="mb-6">
-        <SeasonSelector
-          seasons={seasons}
-          selectedSeason={selectedSeason}
-          onChange={setSelectedSeason}
-        />
-      </div>
-
       {loading && <LoadingState message="Loading dashboard..." />}
       {error && <ErrorState message={`Error: ${error}`} />}
 
       {!loading && !error && overview && (
         <>
           <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="Season" value={overview.season ?? "-"} />
             <StatCard title="Total Races" value={overview.total_races ?? "-"} />
             <StatCard title="Total Drivers" value={overview.total_drivers ?? "-"} />
             <StatCard title="Total Teams" value={overview.total_teams ?? "-"} />
-          </div>
-
-          <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
             <StatCard title="Wins Leader" value={overview.wins_leader ?? "-"} />
           </div>
 

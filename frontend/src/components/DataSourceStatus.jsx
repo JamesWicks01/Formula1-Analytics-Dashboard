@@ -13,10 +13,11 @@ export default function DataSourceStatus({ season }) {
   }, [season]);
 
   if (!state || state.season !== season) {
-    return <p role="status" className="mb-4 text-sm text-gray-600">Loading season data; the first request may take a few minutes.</p>;
+    return <p role="status" className="mt-4 text-xs text-gray-400">Loading season data; the first request may take a few minutes.</p>;
   }
   return (
-    <p role="status" className="mb-4 rounded-xl bg-white p-3 text-sm text-gray-700">
+    <p role="status" className="mt-4 flex flex-wrap items-center gap-x-1 text-xs leading-relaxed text-gray-400">
+      <span aria-hidden="true" className={`mr-1 inline-block h-1.5 w-1.5 rounded-full ${state.error || state.status?.fallback ? "bg-amber-400" : "bg-emerald-400"}`} />
       {state.error || <>
         Data source: {state.status.source === "fastf1" ? "FastF1" : "CSV fallback"}
         {` · ${state.status.completed_races} races with results`}

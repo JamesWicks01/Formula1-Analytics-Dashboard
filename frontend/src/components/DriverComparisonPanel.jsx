@@ -5,16 +5,16 @@ import ErrorState from "./ErrorState";
 
 function DriverStatCard({ title, value }) {
   return (
-    <div className="rounded-xl bg-gray-50 p-4">
-      <p className="text-sm text-gray-500">{title}</p>
-      <p className="mt-1 text-xl font-bold text-gray-900">{value}</p>
+    <div className="rounded-xl border border-gray-800 bg-gray-950/60 p-4">
+      <p className="text-sm text-gray-400">{title}</p>
+      <p className="mt-1 text-xl font-bold text-gray-100">{value}</p>
     </div>
   );
 }
 
 function DriverSummary({ title, data }) {
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-md">
+    <div className="analytics-panel">
       <h3 className="mb-4 text-xl font-bold">{title}</h3>
       <div className="grid grid-cols-2 gap-4">
         <DriverStatCard title="Driver" value={data.driver_name ?? "-"} />
@@ -101,18 +101,19 @@ function DriverComparisonPanel({ season }) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl bg-white p-6 shadow-md">
+      <div className="analytics-panel">
         <h2 className="mb-4 text-2xl font-bold">Driver Comparison</h2>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+            <label htmlFor="compare-driver-1" className="mb-2 block text-sm font-medium text-gray-300">
               Driver 1
             </label>
             <select
+              id="compare-driver-1"
               value={driver1}
               onChange={(e) => setDriver1(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 p-3"
+              className="analytics-control w-full"
             >
               {drivers.map((driver) => (
                 <option key={driver} value={driver}>
@@ -123,13 +124,14 @@ function DriverComparisonPanel({ season }) {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+            <label htmlFor="compare-driver-2" className="mb-2 block text-sm font-medium text-gray-300">
               Driver 2
             </label>
             <select
+              id="compare-driver-2"
               value={driver2}
               onChange={(e) => setDriver2(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 p-3"
+              className="analytics-control w-full"
             >
               {drivers.map((driver) => (
                 <option key={driver} value={driver}>

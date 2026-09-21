@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { fetchSeasons, fetchRaces, fetchRaceDetails } from "../api/client";
+import { fetchRaces, fetchRaceDetails } from "../api/client";
 import Layout from "../components/Layout";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
-import SeasonSelector from "../components/SeasonSelector";
 
 function getPositionNumber(position) {
   if (position === "" || position == null) return null;
@@ -11,9 +10,7 @@ function getPositionNumber(position) {
   return Number.isFinite(value) && value > 0 ? value : null;
 }
 
-function Races() {
-  const [seasons, setSeasons] = useState([2023]);
-  const [selectedSeason, setSelectedSeason] = useState(2023);
+function Races({ selectedSeason }) {
   const [races, setRaces] = useState([]);
   const [selection, setSelection] = useState(null);
   const selectedRace = selection?.season === selectedSeason ? selection.race : "";
@@ -21,23 +18,6 @@ function Races() {
   const [loadingRaces, setLoadingRaces] = useState(true);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    let active = true;
-    async function loadSeasons() {
-      try {
-        const seasonData = await fetchSeasons();
-        if (!active) return;
-        setSeasons(seasonData.seasons || [2023]);
-      } catch {
-        if (!active) return;
-        setSeasons([2023]);
-      }
-    }
-
-    loadSeasons();
-    return () => { active = false; };
-  }, []);
 
   useEffect(() => {
     let active = true;
@@ -156,27 +136,20 @@ function Races() {
 
   return (
     <Layout>
-      <div className="mb-6">
-        <SeasonSelector
-          seasons={seasons}
-          selectedSeason={selectedSeason}
-          onChange={setSelectedSeason}
-        />
-      </div>
-
       {loadingRaces && <LoadingState message="Loading races..." />}
       {error && <ErrorState message={`Error: ${error}`} />}
 
       {!loadingRaces && !error && (
         <div className="space-y-6">
           {/* Race selector */}
-          <div className="rounded-2xl bg-white p-6 shadow-md">
-            <h2 className="mb-4 text-2xl font-bold">Race Explorer</h2>
+          <div className="analytics-panel">
+            <label htmlFor="race-choice" className="mb-3 block text-xs font-semibold uppercase tracking-widest text-gray-400">Select a Grand Prix</label>
 
             <select
+              id="race-choice"
               value={selectedRace}
               onChange={(e) => setSelection({ season: selectedSeason, race: e.target.value })}
-              className="w-full rounded-xl border border-gray-300 p-3"
+              className="analytics-control w-full"
             >
               {races.map((race) => (
                 <option key={race} value={race}>
@@ -189,7 +162,7 @@ function Races() {
           {/* Summary cards */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {biggestGainer && (
-              <div className="rounded-2xl bg-white p-6 shadow-md">
+              <div className="analytics-panel">
                 <h3 className="text-xl font-bold">Biggest Gainer</h3>
                 <p className="mt-2">
                   {biggestGainer.driver_name} gained{" "}
@@ -199,7 +172,7 @@ function Races() {
             )}
 
             {biggestLoser && (
-              <div className="rounded-2xl bg-white p-6 shadow-md">
+              <div className="analytics-panel">
                 <h3 className="text-xl font-bold">Biggest Loser</h3>
                 <p className="mt-2">
                   {biggestLoser.driver_name} lost{" "}
@@ -213,13 +186,13 @@ function Races() {
 
           {/* Results table */}
           {!loadingDetails && processedResults.length > 0 && (
-            <div className="rounded-2xl bg-white p-6 shadow-md">
+            <div className="analytics-panel">
               <h3 className="mb-4 text-xl font-bold">{selectedRace} Results</h3>
 
               <div className="overflow-x-auto">
                 <table className="min-w-full border-collapse text-sm">
                   <thead>
-                    <tr className="border-b text-left">
+                    <tr className="border-b border-gray-700 text-left">
                       <th className="p-3">Position</th>
                       <th className="p-3">Driver</th>
                       <th className="p-3">Team</th>
@@ -249,12 +222,12 @@ function Races() {
                       return (
                         <tr
                           key={result.driver_name}
-                          className={`border-b hover:bg-gray-50
-                            ${isWinner ? "bg-yellow-50" : ""}
-                            ${isSecond ? "bg-gray-200" : ""}
-                            ${isThird ? "bg-orange-100" : ""}
-                            ${isBiggestLoser ? "bg-red-50" : ""}
-                            ${isBiggestGainer ? "bg-green-50" : ""}
+                          className={`border-b border-gray-800 hover:bg-gray-800/70
+                            ${isWinner ? "bg-yellow-500/5" : ""}
+                            ${isSecond ? "bg-slate-400/5" : ""}
+                            ${isThird ? "bg-orange-500/5" : ""}
+                            ${isBiggestLoser ? "bg-red-500/5" : ""}
+                            ${isBiggestGainer ? "bg-emerald-500/5" : ""}
                           `}
                         >
                           <td className="p-3">{result.position || "-"}</td>
@@ -263,31 +236,31 @@ function Races() {
                             {result.driver_name}
 
                             {isWinner && (
-                              <span className="ml-2 rounded bg-yellow-200 px-2 py-1 text-xs">
+                              <span className="ml-2 rounded bg-yellow-500/15 text-yellow-300 px-2 py-1 text-xs">
                                 Winner
                               </span>
                             )}
 
                             {isSecond && (
-                              <span className="ml-2 rounded bg-gray-300 px-2 py-1 text-xs">
+                              <span className="ml-2 rounded bg-slate-400/15 text-slate-300 px-2 py-1 text-xs">
                                 2nd
                               </span>
                             )}
 
                             {isThird && (
-                              <span className="ml-2 rounded bg-orange-300 px-2 py-1 text-xs">
+                              <span className="ml-2 rounded bg-orange-500/15 text-orange-300 px-2 py-1 text-xs">
                                 3rd
                               </span>
                             )}
 
                             {isBiggestGainer && (
-                              <span className="ml-2 rounded bg-green-200 px-2 py-1 text-xs">
+                              <span className="ml-2 rounded bg-emerald-500/15 text-emerald-300 px-2 py-1 text-xs">
                                 Biggest Gainer
                               </span>
                             )}
 
                             {isBiggestLoser && (
-                              <span className="ml-2 rounded bg-red-200 px-2 py-1 text-xs">
+                              <span className="ml-2 rounded bg-red-500/15 text-red-300 px-2 py-1 text-xs">
                                 Biggest Loser
                               </span>
                             )}
@@ -308,7 +281,7 @@ function Races() {
 
                           <td className="p-3">
                             {result.isDnf ? (
-                              <span className="rounded bg-red-200 px-2 py-1 text-xs">
+                              <span className="rounded bg-red-500/15 text-red-300 px-2 py-1 text-xs">
                                 {result.time_retired || "DNF"}
                               </span>
                             ) : (

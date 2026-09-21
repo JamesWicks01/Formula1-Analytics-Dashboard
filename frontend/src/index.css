@@ -4,3 +4,38 @@ body {
   margin: 0;
   font-family: Arial, sans-serif;
 }
+
+@layer components {
+  .analytics-panel {
+    @apply min-w-0 rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-lg sm:p-6;
+  }
+
+  .analytics-control {
+    @apply min-w-0 rounded-xl border border-gray-700 bg-gray-950 p-3 text-sm text-gray-200 placeholder:text-gray-500 focus:border-red-500 focus:outline-2 focus:outline-red-500;
+    color-scheme: dark;
+  }
+
+  .analytics-shell table {
+    @apply w-full text-left text-sm text-gray-300;
+  }
+
+  .analytics-shell thead {
+    @apply bg-gray-950/50 text-xs uppercase tracking-wider text-gray-400;
+  }
+
+  .analytics-shell th {
+    @apply whitespace-nowrap font-semibold;
+  }
+
+  .analytics-shell td {
+    @apply tabular-nums;
+  }
+
+  .analytics-shell tbody tr {
+    @apply transition-colors;
+  }
+
+  .analytics-shell a:focus-visible {
+    @apply rounded outline-2 outline-offset-4 outline-red-400;
+  }
+}
